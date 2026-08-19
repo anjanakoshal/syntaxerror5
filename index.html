@@ -338,11 +338,27 @@
                 <input type="text" id="pin-origin-input" class="form-control" placeholder="Origin PIN (e.g. 682011)" data-i18n="originPinPlaceholder" value="682011" required maxlength="6">
               </div>
               <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label">Destination PIN Code (Optional for single check)</label>
-                <input type="text" id="pin-dest-input" class="form-control" placeholder="Destination PIN (e.g. 688001)" data-i18n="destPinPlaceholder" value="688001" maxlength="6">
+                <label class="form-label required">Destination PIN Code</label>
+                <input type="text" id="pin-dest-input" class="form-control" placeholder="Destination PIN (e.g. 688001)" data-i18n="destPinPlaceholder" value="688001" maxlength="6" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label required">Travel date</label>
+                <input type="date" id="pin-travel-date" class="form-control" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Departure time</label>
+                <input type="time" id="pin-departure-time" class="form-control">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Travel mode</label>
+                <select id="pin-travel-mode" class="form-control">
+                  <option value="driving">Driving</option>
+                  <option value="motorcycle">Motorcycle</option>
+                  <option value="walking">Walking</option>
+                </select>
               </div>
               <button type="submit" class="btn btn-primary" style="height: 42px; font-size: 0.9rem;" data-i18n="checkRouteBtn">
-                🚦 Analyze Route Hazards & Safe Detours
+                🚦 Get Route + Weather
               </button>
             </div>
           </form>
@@ -940,6 +956,7 @@
   <script src="js/storage.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/audio.js"></script>
+  <script src="js/config.js"></script>
   <script src="js/map.js"></script>
   <script src="js/pincode.js"></script>
   <script src="js/sos.js"></script>

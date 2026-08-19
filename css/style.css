@@ -1272,6 +1272,50 @@ html, body {
   white-space: nowrap;
 }
 
+.route-timeline {
+  border-left: 3px solid #38bdf8;
+  margin: 0 0 16px 8px;
+  padding-left: 18px;
+}
+
+.route-timeline-title {
+  color: #7dd3fc;
+  font-size: 0.78rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.route-checkpoint {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  color: var(--text-main);
+}
+
+.route-checkpoint-dot {
+  position: absolute;
+  left: -26px;
+  top: 12px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #0f172a;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+
+.route-checkpoint.green .route-checkpoint-dot { background: #22c55e; }
+.route-checkpoint.yellow .route-checkpoint-dot { background: #eab308; }
+.route-checkpoint.orange .route-checkpoint-dot { background: #f97316; }
+.route-checkpoint.red .route-checkpoint-dot { background: #ef4444; }
+.route-checkpoint strong, .route-checkpoint span { display: block; }
+.route-checkpoint span { color: var(--text-muted); font-size: 0.74rem; margin-top: 2px; }
+
+@media (max-width: 768px) {
+  .route-timeline { margin-top: 14px; }
+  .route-weather-box + .route-weather-box { margin-top: 8px; }
+}
+
 /* ==========================================================================
    OSRM Turn-by-Turn Directions List (Google Maps Style)
    ========================================================================== */

@@ -188,6 +188,7 @@ class MonsoonApp {
 document.addEventListener('DOMContentLoaded', () => {
   window.app = new MonsoonApp();
   window.floodMap = new window.FloodMapEngine('flood-map-canvas');
+  window.pincodeEngine = new window.PincodeRouteEngine();
   window.sosManager = new window.SOSManager();
   window.shelterManager = new window.ShelterManager();
   window.telemetryEngine = new window.TelemetryEngine();
