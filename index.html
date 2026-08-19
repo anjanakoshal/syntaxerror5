@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live RainWise (JalRaksha) - Flood Emergency Response & Crisis Management Operating System</title>
+  <meta name="description" content="Ultra-lightweight, zero-bloat, offline-first disaster response system with PIN code route weather, double-verified crowd reporting, IMD advisories, 11 Indian languages, and safe routing.">
+  <meta name="theme-color" content="#090d16">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <!-- Leaflet Maps CSS (Google Maps style interactive map engine) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/map.css">
+</head>
+<body>
+  <div class="ambient-bg"></div>
+  <div class="ambient-grid"></div>
+
+  <div id="app-container">
+    <!-- Top Emergency Broadcast Banner -->
+    <aside class="emergency-ticker" aria-label="Emergency Alert Ticker">
+      <div class="ticker-content">
+        <span class="ticker-badge">🔴 RED ALERT</span>
+        <span class="ticker-text">
+          SEVERE MONSOON INUNDATION & SQUALL WARNING (IMD BULLETIN) • MITHI RIVER AT 4.85M • SQUALLY WINDS 75 KM/H • SUBWAY ROADBLOCKS AT PIN 400001, 400070 & 400076 • EVACUATION PROTOCOLS ACTIVE
+        </span>
+      </div>
+      <div id="live-clock" style="font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.5px; opacity: 0.9;">--:--:-- IST</div>
+    </aside>
+
+    <!-- Main Navigation Header -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="brand-logo" aria-hidden="true">🛡️</div>
+        <div class="brand-title">
+          <h1><span data-i18n="appTitle">Live RainWise</span> <span class="tag">JalRaksha v3.0</span></h1>
+          <p data-i18n="appSubtitle">Disaster Management & Flood Emergency Response Command Center</p>
+        </div>
+      </div>
+
+      <!-- Telemetry Status Pills -->
+      <div class="header-telemetry">
+        <div class="telemetry-pill danger">
+          <div class="indicator-dot"></div>
+          <span><span data-i18n="floodThreat">Flood Threat</span>: <strong data-i18n="extreme">EXTREME</strong></span>
+        </div>
+        <div class="telemetry-pill warning">
+          <div class="indicator-dot"></div>
+          <span><span data-i18n="rainfall">Rainfall</span>: <strong>210 mm/24h</strong></span>
+        </div>
+        <div class="telemetry-pill">
+          <div class="indicator-dot"></div>
+          <span><strong data-i18n="offlineReady">Offline Ready (PWA)</strong></span>
+        </div>
+      </div>
+
+      <!-- Language Switcher & Action Buttons -->
+      <div class="header-actions">
+        <!-- 11 Indian Languages Dropdown -->
+        <div class="lang-selector-wrapper">
+          <span>🌐</span>
+          <select id="language-select" class="lang-select" aria-label="Select Language">
+            <option value="en">English</option>
+            <option value="hi">हिन्दी (Hindi)</option>
+            <option value="mr">मराठी (Marathi)</option>
+            <option value="bn">বাংলা (Bengali)</option>
+            <option value="ta">தமிழ் (Tamil)</option>
+            <option value="te">తెలుగు (Telugu)</option>
+            <option value="gu">ગુજરાતી (Gujarati)</option>
+            <option value="kn">ಕನ್ನಡ (Kannada)</option>
+            <option value="ml">മലയാളം (Malayalam)</option>
+            <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+            <option value="or">ଓଡ଼ିଆ (Odia)</option>
+          </select>
+        </div>
+
+        <button id="siren-toggle-btn" class="btn btn-secondary" title="Sound NDRF oscillating alarm" data-i18n="sirenBtn">
+          📢 EMERGENCY SIREN
+        </button>
+        <button id="toggle-contrast-btn" class="btn btn-secondary" title="High contrast 2G mode" data-i18n="highContrastBtn">
+          ⚡ 2G / High Contrast
+        </button>
+        <button id="trigger-simulation-btn" class="btn btn-primary" title="Simulate realistic emergency event" data-i18n="simulateBtn">
+          🔄 Simulate Incident
+        </button>
+        <button id="toggle-mute-btn" class="btn btn-icon" title="Toggle audio sound effects">
+          🔊
+        </button>
+      </div>
+    </header>
+
+    <!-- Emergency Hotline Quick Dial Bar -->
+    <section class="hotline-bar" aria-label="Emergency Hotlines">
+      <span style="font-weight: 700; color: var(--color-danger); text-transform: uppercase; font-size: 0.75rem; display: flex; align-items: center; gap: 4px;" data-i18n="helplineTitle">
+        🚨 Instant Helplines:
+      </span>
+      <div class="hotline-list">
+        <a href="tel:112" class="hotline-item">
+          <span>National Emergency:</span>
+          <span class="hotline-number">112</span>
+        </a>
+        <a href="tel:1077" class="hotline-item">
+          <span>Disaster Control:</span>
+          <span class="hotline-number">1077</span>
+        </a>
+        <a href="tel:108" class="hotline-item">
+          <span>Flood Ambulance:</span>
+          <span class="hotline-number">108</span>
+        </a>
+        <a href="tel:1070" class="hotline-item">
+          <span>State Disaster Force (SDRF):</span>
+          <span class="hotline-number">1070</span>
+        </a>
+        <a href="tel:1916" class="hotline-item">
+          <span>Civic Waterlogging:</span>
+          <span class="hotline-number">1916</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Tab Navigation -->
+    <nav class="nav-tabs-wrapper" aria-label="Main Modules Navigation">
+      <ul class="nav-tabs">
+        <li>
+          <button class="nav-tab-btn active" data-tab="map-tab" data-i18n="tabMap">
+            🗺️ Live Flood Radar & Evacuation Map
+          </button>
+        </li>
+        <li>
+          <button class="nav-tab-btn" data-tab="pincode-tab" data-i18n="tabPinRoute">
+            📍 PIN Code Route Weather
+          </button>
+        </li>
+        <li>
+          <button class="nav-tab-btn" data-tab="sos-tab" data-i18n="tabSOS">
+            🚨 One-Touch SOS & Dispatch <span id="sos-badge-count" class="badge-count">3</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-tab-btn" data-tab="crowd-report-tab" data-i18n="tabCrowdReport">
+            📸 Verified Incident Reports
+          </button>
+        </li>
+        <li>
+          <button class="nav-tab-btn" data-tab="shelters-tab" data-i18n="tabShelters">
+            ⛺ Relief Camps & Logistics
+          </button>
+        </li>
+        <li>
+          <button class="nav-tab-btn" data-tab="telemetry-tab" data-i18n="tabTelemetry">
+            🌧️ Meteorologist HUD & Wind
+          </button>
+        </li>
+        <li>
+          <button class="nav-tab-btn" data-tab="survival-tab" data-i18n="tabSurvival">
+            📖 Survival Protocols & Check-In
+          </button>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="main-content">
+      
+      <!-- =========================================================================
+           TAB 1: LIVE FLOOD RADAR & EVACUATION MAP
+           ========================================================================= -->
+      <section id="map-tab" class="tab-pane active">
+        <div class="grid-map-layout">
+          <!-- Left: Google Maps Style Interactive Map Container -->
+          <div class="map-container">
+            <!-- HUD Top Bar & Google Style Search Bar -->
+            <div class="map-hud-top">
+              <div class="map-layer-toggles">
+                <!-- Google Map Tile Layer Switcher -->
+                <div class="map-type-selector">
+                  <button id="map-type-streets" class="map-type-btn active" onclick="window.floodMap.setMapType('streets')">🗺️ Streets</button>
+                  <button id="map-type-satellite" class="map-type-btn" onclick="window.floodMap.setMapType('satellite')">🛰️ Satellite</button>
+                  <button id="map-type-dark" class="map-type-btn" onclick="window.floodMap.setMapType('dark')">🌙 Dark Radar</button>
+                </div>
+
+                <div style="height: 18px; width: 1px; background: var(--border-subtle); margin: 0 4px;"></div>
+
+                <button class="layer-btn active" onclick="this.classList.toggle('active'); window.floodMap.toggleLayer('flood');">
+                  🌊 Inundation
+                </button>
+                <button class="layer-btn active" onclick="this.classList.toggle('active'); window.floodMap.toggleLayer('shelters');">
+                  ⛺ Shelters
+                </button>
+                <button class="layer-btn active" onclick="this.classList.toggle('active'); window.floodMap.toggleLayer('boats');">
+                  🚤 Rescue Boats
+                </button>
+                <button class="layer-btn active" onclick="this.classList.toggle('active'); window.floodMap.toggleLayer('sos');">
+                  🚨 Distress SOS
+                </button>
+                <button class="layer-btn active" onclick="this.classList.toggle('active'); window.floodMap.toggleLayer('pincodes');">
+                  📍 PIN Zones
+                </button>
+              </div>
+
+              <!-- Quick Place / PIN Search inside Google Map -->
+              <div class="map-search-bar">
+                <span>🔍</span>
+                <input type="text" id="map-quick-search" placeholder="Search sector, landmark or PIN..." onkeydown="if(event.key==='Enter') window.floodMap.searchAndFlyTo(this.value)">
+                <button class="btn btn-primary" style="padding: 4px 8px; font-size: 0.72rem;" onclick="window.floodMap.searchAndFlyTo(document.getElementById('map-quick-search').value)">Go</button>
+              </div>
+            </div>
+
+            <!-- Leaflet Interactive Map View Container -->
+            <div id="flood-map-canvas" class="google-map-view"></div>
+
+            <!-- Map Controls -->
+            <div class="map-controls">
+              <button class="map-ctrl-btn" onclick="window.floodMap.zoomIn();" title="Zoom In">+</button>
+              <button class="map-ctrl-btn" onclick="window.floodMap.zoomOut();" title="Zoom Out">−</button>
+              <button class="map-ctrl-btn" onclick="window.floodMap.locateUser();" title="Locate Current Position">🎯</button>
+              <button class="map-ctrl-btn" onclick="window.floodMap.resetView();" title="Center Full City">⌂</button>
+            </div>
+
+            <!-- Legend Overlay -->
+            <div class="map-legend">
+              <div class="legend-title">Hazard Depth & Roadblock Legend</div>
+              <div class="legend-item">
+                <div class="legend-color-box deep-water"></div>
+                <span>Critical Flood (> 4.0 ft) / Roadblock</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color-box moderate-water"></div>
+                <span>Moderate Water (2.0 - 4.0 ft)</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color-box safe-zone"></div>
+                <span>Designated High-Ground Shelter</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color-box evac-route"></div>
+                <span>Safe Evacuation Corridor</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Map Interaction & Route Details -->
+          <div class="map-details-card">
+            <!-- Safe Evacuation Route Card -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">🧭 Dynamic Safe Route Navigator</span>
+                <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 4px 8px;" onclick="window.floodMap.calculateSafeRoute()">
+                  Recalculate
+                </button>
+              </div>
+              <div id="active-route-display">
+                <!-- Dynamically populated by map.js -->
+              </div>
+              <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 10px;">
+                💡 <em>Click anywhere on the radar map to place your pin and generate an elevated evacuation route that bypasses flooded underpasses.</em>
+              </p>
+            </div>
+
+            <!-- Selected Marker Info Panel -->
+            <div id="selected-marker-info">
+              <div class="card" style="border-style: dashed; border-color: var(--border-subtle); text-align: center; color: var(--text-muted); padding: 24px;">
+                <div style="font-size: 1.8rem; margin-bottom: 6px;">🎯</div>
+                <div style="font-weight: 600; font-size: 0.85rem;">Interactive Radar & PIN Inspector</div>
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 4px;">
+                  Click any relief camp, boat, PIN sector, or SOS ping on the radar to inspect real-time water depth and road hazard status.
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Vessel & Rescue Units List -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">🚤 Active Rescue Flotilla</span>
+                <span style="font-size: 0.75rem; color: var(--color-success); font-weight: 700;">4 BOATS LIVE</span>
+              </div>
+              <div class="boat-list">
+                <div class="boat-item">
+                  <div>
+                    <strong>NDRF Zodiac 01</strong>
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">Mithi River Basin (PIN 400070)</div>
+                  </div>
+                  <span class="boat-status-tag on-mission">ON RESCUE</span>
+                </div>
+                <div class="boat-item">
+                  <div>
+                    <strong>Coast Guard Jet Ski A-4</strong>
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">Railway Colony (PIN 400050)</div>
+                  </div>
+                  <span class="boat-status-tag en-route">EN ROUTE</span>
+                </div>
+                <div class="boat-item">
+                  <div>
+                    <strong>SDRF Motorboat 09</strong>
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">Creek Junction Depot</div>
+                  </div>
+                  <span class="boat-status-tag available">STANDBY</span>
+                </div>
+                <div class="boat-item">
+                  <div>
+                    <strong>Civil Fishermen Boat #3</strong>
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">East Market Sector (PIN 400076)</div>
+                  </div>
+                  <span class="boat-status-tag on-mission">ON RESCUE</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================================
+           TAB 2: PIN CODE ROUTE WEATHER & HAZARD INSPECTOR
+           ========================================================================= -->
+      <section id="pincode-tab" class="tab-pane">
+        <div class="pin-search-container">
+          <div class="card-header" style="border: none; padding: 0; margin-bottom: 12px;">
+            <h2 style="font-size: 1.25rem; color: #fff; display: flex; align-items: center; gap: 8px;">
+              <span>📍</span> <span data-i18n="pinSearchTitle">Check Route Weather by PIN Code</span>
+            </h2>
+            <span class="badge-triage resolved">REAL-TIME WEATHER ROUTER</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+            Enter your Origin and Destination PIN codes to analyze road blockades, rainfall intensity, severe wind gusts, and generate safe elevated bypass corridors.
+          </p>
+
+          <form id="pincode-route-form">
+            <div class="grid-3col" style="gap: 12px; align-items: end;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label required">Origin PIN Code</label>
+                <input type="text" id="pin-origin-input" class="form-control" placeholder="Origin PIN (e.g. 682011)" data-i18n="originPinPlaceholder" value="682011" required maxlength="6">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Destination PIN Code (Optional for single check)</label>
+                <input type="text" id="pin-dest-input" class="form-control" placeholder="Destination PIN (e.g. 688001)" data-i18n="destPinPlaceholder" value="688001" maxlength="6">
+              </div>
+              <button type="submit" class="btn btn-primary" style="height: 42px; font-size: 0.9rem;" data-i18n="checkRouteBtn">
+                🚦 Analyze Route Hazards & Safe Detours
+              </button>
+            </div>
+          </form>
+
+          <!-- Quick Test Route Pills — Real Kerala Flood Routes -->
+          <div class="pin-quick-pills-list">
+            <span style="font-size: 0.75rem; color: var(--text-dim); align-self: center;">Kerala Flood Routes:</span>
+            <button class="pin-quick-pill" data-origin="682011" data-dest="688001">Ernakulam ➔ Alappuzha</button>
+            <button class="pin-quick-pill" data-origin="686001" data-dest="682011">Kottayam ➔ Kochi</button>
+            <button class="pin-quick-pill" data-origin="689643" data-dest="688001">Pathanamthitta ➔ Alleppey</button>
+            <button class="pin-quick-pill" data-origin="673016" data-dest="680001">Kozhikode ➔ Thrissur</button>
+            <button class="pin-quick-pill" data-origin="682011" data-dest="">Single Check: Ernakulam</button>
+          </div>
+        </div>
+
+        <!-- Route Assessment Results Box -->
+        <div id="pin-route-results" style="display: none;">
+          <!-- Populated by pincode.js -->
+        </div>
+      </section>
+
+      <!-- =========================================================================
+           TAB 3: ONE-TOUCH SOS & RESCUE DISPATCH
+           ========================================================================= -->
+      <section id="sos-tab" class="tab-pane">
+        <div class="grid-2col">
+          <!-- Left: Emergency SOS Broadcast Form -->
+          <div class="card" style="border-color: var(--color-danger-glow);">
+            <div class="card-header">
+              <span class="card-title" style="color: #fca5a5;">
+                <span class="icon">🚨</span> One-Tap Emergency Distress Broadcast
+              </span>
+              <span class="badge-triage critical">PRIORITY 1</span>
+            </div>
+
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
+              Submitting distress immediately alerts nearby NDRF rescue boats, local disaster response teams, and generates an emergency offline SMS payload.
+            </p>
+
+            <form id="sos-request-form">
+              <!-- Distress Category Grid -->
+              <div class="form-group">
+                <label class="form-label required">Select Emergency Category</label>
+                <div class="sos-type-selector">
+                  <label class="sos-type-option">
+                    <input type="radio" name="sos-type" value="Rooftop Stranded" checked>
+                    <div class="sos-type-box">
+                      <div class="type-title">🏠 Rooftop Stranded</div>
+                      <div class="type-desc">Ground floor submerged, trapped on roof / balcony</div>
+                    </div>
+                  </label>
+                  <label class="sos-type-option">
+                    <input type="radio" name="sos-type" value="Medical Emergency">
+                    <div class="sos-type-box">
+                      <div class="type-title">💉 Medical Emergency</div>
+                      <div class="type-desc">Critical patient, oxygen/dialysis, injury, or elderly</div>
+                    </div>
+                  </label>
+                  <label class="sos-type-option">
+                    <input type="radio" name="sos-type" value="Drinking Water & Food">
+                    <div class="sos-type-box">
+                      <div class="type-title">💧 Water / Food Depleted</div>
+                      <div class="type-desc">Cut off without safe drinking water or dry rations</div>
+                    </div>
+                  </label>
+                  <label class="sos-type-option">
+                    <input type="radio" name="sos-type" value="Submerged Vehicle">
+                    <div class="sos-type-box">
+                      <div class="type-title">🚗 Trapped in Vehicle</div>
+                      <div class="type-desc">Car or bus stalled in rising floodwaters</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div class="grid-2col" style="gap: 12px;">
+                <div class="form-group">
+                  <label class="form-label required">Full Name / Point of Contact</label>
+                  <input type="text" id="sos-name" class="form-control" placeholder="e.g. Ramesh Sharma" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label required">Mobile Phone Number</label>
+                  <input type="tel" id="sos-phone" class="form-control" placeholder="e.g. +91 98765 43210" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label required">Stranded Location & PIN Code</label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" id="sos-location-input" class="form-control" placeholder="House number, landmark, PIN Code..." required>
+                  <button type="button" id="auto-gps-btn" class="btn btn-secondary" style="white-space: nowrap; font-size: 0.8rem;">
+                    📍 Auto GPS
+                  </button>
+                </div>
+                <input type="hidden" id="sos-coords-hidden">
+              </div>
+
+              <div class="grid-2col" style="gap: 12px;">
+                <div class="form-group">
+                  <label class="form-label">Total Stranded Persons</label>
+                  <input type="number" id="sos-headcount" class="form-control" value="1" min="1" max="100">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Estimated Water Level</label>
+                  <select id="sos-water-depth" class="form-select">
+                    <option value="Above Waist (> 3 ft)">Above Waist (> 3 ft)</option>
+                    <option value="Above Chest (> 5 ft)">Above Chest (> 5 ft)</option>
+                    <option value="Submerging 1st Floor (> 8 ft)">Submerging 1st Floor (> 8 ft)</option>
+                    <option value="Ankle / Knee Depth (1-2 ft)">Ankle / Knee Depth (1-2 ft)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Urgent Details & Special Needs</label>
+                <textarea id="sos-details" class="form-textarea" placeholder="Mention if infants, pregnant women, pets, or immediate medical supplies are needed..."></textarea>
+              </div>
+
+              <div style="display: flex; gap: 12px; margin-top: 8px;">
+                <button type="submit" class="btn btn-danger btn-sos-glow" style="flex: 1; padding: 12px; font-size: 1rem;">
+                  🚨 BROADCAST EMERGENCY SOS
+                </button>
+                <button type="button" class="btn btn-warning" onclick="window.emergencyAudio.startRescueBeacon()" title="Launch full-screen flashing strobe to guide rescue helicopters/boats at night">
+                  🔦 Strobe Beacon
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Right: Live Triage & Rescue Dispatch Board -->
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="grid-2col">
+              <div class="metric-card danger">
+                <div class="metric-header">Active SOS Distress</div>
+                <div class="metric-value" id="stat-active-sos">3</div>
+                <div class="metric-footer">🚨 Field units alerted</div>
+              </div>
+              <div class="metric-card warning">
+                <div class="metric-header">Critical Triage</div>
+                <div class="metric-value" id="stat-critical-sos">2</div>
+                <div class="metric-footer">⚠️ Priority 1 Rescue</div>
+              </div>
+            </div>
+
+            <!-- Rescue Queue Card -->
+            <div class="card" style="flex: 1;">
+              <div class="card-header">
+                <span class="card-title">📋 Live Rescue Dispatch Queue</span>
+                <div style="display: flex; gap: 4px;">
+                  <button id="filter-all" class="btn btn-secondary sos-filter-btn active" style="font-size: 0.72rem; padding: 4px 8px;" onclick="window.sosManager.setFilter('all')">All</button>
+                  <button id="filter-pending" class="btn btn-secondary sos-filter-btn" style="font-size: 0.72rem; padding: 4px 8px;" onclick="window.sosManager.setFilter('pending')">Pending</button>
+                  <button id="filter-assigned" class="btn btn-secondary sos-filter-btn" style="font-size: 0.72rem; padding: 4px 8px;" onclick="window.sosManager.setFilter('assigned')">En Route</button>
+                  <button id="filter-resolved" class="btn btn-secondary sos-filter-btn" style="font-size: 0.72rem; padding: 4px 8px;" onclick="window.sosManager.setFilter('resolved')">Rescued</button>
+                </div>
+              </div>
+
+              <!-- List Container -->
+              <div id="sos-list-container" style="max-height: 480px; overflow-y: auto;">
+                <!-- Populated by sos.js -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================================
+           TAB 4: VERIFIED CROWDSOURCED INCIDENT REPORTS (ANTI-FAKE PROTECTED)
+           ========================================================================= -->
+      <section id="crowd-report-tab" class="tab-pane">
+        <div class="grid-2col">
+          <!-- Left: Incident Submission Form with Double Verification -->
+          <div class="card" style="border-color: var(--color-accent);">
+            <div class="card-header">
+              <span class="card-title">
+                <span class="icon">📸</span> <span data-i18n="reportIncidentTitle">Report Weather Incident with Photo/Video</span>
+              </span>
+              <span class="badge-verified-reporter" data-i18n="doubleVerifiedBadge">
+                🛡️ Transit-Verified Reporter (Anti-Fake Protected)
+              </span>
+            </div>
+
+            <div class="alert-box info" style="margin-bottom: 14px;">
+              <div>
+                <strong>🔒 ANTI-FAKE DOUBLE VERIFICATION ACTIVE:</strong> To prevent rumor-mongering, each report requires <strong>Mobile OTP</strong> + your <strong>Live Bus / Transit Route Number & Timestamp</strong> as proof of physical on-ground presence.
+              </div>
+            </div>
+
+            <form id="crowd-incident-form">
+              <div class="grid-2col" style="gap: 10px;">
+                <div class="form-group">
+                  <label class="form-label required">Reporter Full Name</label>
+                  <input type="text" id="rep-name" class="form-control" placeholder="e.g. Vikramaditya Rao" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label required">Mobile Number (OTP Verified)</label>
+                  <input type="tel" id="rep-phone" class="form-control" placeholder="+91 98201 00000" required>
+                </div>
+              </div>
+
+              <!-- Transit Verification Credentials (Anti-Fake) -->
+              <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-active); border-radius: var(--radius-md); padding: 12px; margin-bottom: 14px;">
+                <div style="font-weight: 700; font-size: 0.85rem; color: var(--color-accent); margin-bottom: 8px;">
+                  🚌 Double Verification: Daily Transit / Bus Reference
+                </div>
+                <div class="grid-2col" style="gap: 10px;">
+                  <div class="form-group" style="margin-bottom: 6px;">
+                    <label class="form-label required">Bus / Train Route Number</label>
+                    <input type="text" id="rep-bus-number" class="form-control" placeholder="e.g. BEST Route #332 / Bus MH-01" required>
+                  </div>
+                  <div class="form-group" style="margin-bottom: 6px;">
+                    <label class="form-label required">Boarding / Commute Time</label>
+                    <input type="text" id="rep-transit-time" class="form-control" placeholder="e.g. Today, 08:15 AM" value="Today, 08:30 AM" required>
+                  </div>
+                </div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+                  ✓ Transit metadata validates ground presence against city transport GPS feeds.
+                </div>
+              </div>
+
+              <div class="grid-2col" style="gap: 10px;">
+                <div class="form-group">
+                  <label class="form-label required">Area PIN Code</label>
+                  <input type="text" id="rep-pin" class="form-control" placeholder="e.g. 400070" required maxlength="6">
+                </div>
+                <div class="form-group">
+                  <label class="form-label required">Specific Landmark / Stop</label>
+                  <input type="text" id="rep-location" class="form-control" placeholder="e.g. Bail Bazaar Bus Depot" required>
+                </div>
+              </div>
+
+              <div class="grid-2col" style="gap: 10px;">
+                <div class="form-group">
+                  <label class="form-label required">Hazard Type</label>
+                  <select id="rep-hazard-type" class="form-select">
+                    <option value="Flash Flood & Road Block">🌊 Flash Flood & Road Block</option>
+                    <option value="Fallen Tree & High Wind Damage">🌪️ Fallen Tree & Severe Wind Damage</option>
+                    <option value="Submerged Railway / Highway Underpass">🚧 Submerged Highway Underpass</option>
+                    <option value="Landslide / Mud Accumulation">⛰️ Landslide / Mud Accumulation</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Estimated Water Depth</label>
+                  <select id="rep-water-depth" class="form-select">
+                    <option value="1-2 Feet (Light Inundation)">1-2 Feet (Slow Traffic)</option>
+                    <option value="3-4 Feet (Submerging Cars)">3-4 Feet (Buses Trapped)</option>
+                    <option value="5+ Feet (Critical Flood)">5+ Feet (Total Roadblock)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Media Attachment File Input -->
+              <div class="form-group">
+                <label class="form-label required">Attach Photo or Video Proof</label>
+                <input type="file" id="report-media-input" class="form-control" accept="image/*,video/*">
+                <div id="media-preview-container"></div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Description & Live Road Condition</label>
+                <textarea id="rep-description" class="form-textarea" placeholder="Describe the current situation, traffic movement, or if rescue assistance is required..."></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-success" style="width: 100%; padding: 12px; font-size: 0.95rem;">
+                🛡️ Submit Double-Verified Incident Report
+              </button>
+            </form>
+          </div>
+
+          <!-- Right: Verified Incidents Stream -->
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">🛡️ Verified Citizen & Commuter Incident Feed</span>
+                <input type="text" id="filter-report-pin" class="form-control" style="width: 160px; padding: 4px 8px; font-size: 0.78rem;" placeholder="Filter by PIN...">
+              </div>
+              <div id="verified-reports-feed" style="max-height: 650px; overflow-y: auto;">
+                <!-- Populated by verifiedReports.js -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================================
+           TAB 5: RELIEF CAMPS & SHELTER LOGISTICS
+           ========================================================================= -->
+      <section id="shelters-tab" class="tab-pane">
+        <div class="grid-3col" style="margin-bottom: 20px;">
+          <div class="metric-card success">
+            <div class="metric-header">Total Evacuated Capacity</div>
+            <div class="metric-value" id="metric-total-shelters-cap">2,225 / 3,050</div>
+            <div class="metric-footer">73% Total Shelter Utilization</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-header">Available Free Beds</div>
+            <div class="metric-value" id="metric-available-beds" style="color: var(--color-accent);">825</div>
+            <div class="metric-footer">Across 4 designated relief camps</div>
+          </div>
+          <div class="metric-card warning">
+            <div class="metric-header">Stocked Dry Rations</div>
+            <div class="metric-value" id="metric-food-supply">6,250 pkts</div>
+            <div class="metric-footer">Ready-to-eat meal packets</div>
+          </div>
+        </div>
+
+        <div class="grid-map-layout">
+          <div>
+            <h2 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+              <span>⛺</span> Designated High-Ground Relief Hubs
+            </h2>
+            <div id="shelter-cards-grid" class="grid-2col" style="gap: 16px;">
+              <!-- Populated by shelters.js -->
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🤝 Volunteer Task Force</span>
+              <span style="font-size: 0.75rem; color: var(--color-accent); font-weight: 700;">ACTIVE LOGISTICS</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px;">
+              Civilians and medical professionals can enlist for field squads to assist NDRF operations.
+            </p>
+            <div id="volunteer-tasks-container" style="display: flex; flex-direction: column; gap: 10px;">
+              <!-- Populated by shelters.js -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================================
+           TAB 6: METEOROLOGIST HUD, RIVER GAUGES & SQUALL WIND
+           ========================================================================= -->
+      <section id="telemetry-tab" class="tab-pane">
+        <!-- IMD Official Bulletins Banner -->
+        <div class="card" style="margin-bottom: 20px; border-color: var(--color-danger);">
+          <div class="card-header">
+            <span class="card-title" data-i18n="imdTitle">🌪️ IMD Meteorologist Synoptic Advisories</span>
+            <span class="badge-triage critical">OFFICIAL RADAR FEED</span>
+          </div>
+          <div id="imd-bulletins-container">
+            <!-- Populated by telemetry.js -->
+          </div>
+        </div>
+
+        <!-- Telemetry Gauges Section -->
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="card-header">
+            <span class="card-title">🌊 Live River Gauge & Wind Squall Telemetry</span>
+            <span class="badge-triage critical">AUTOMATED SENSORS</span>
+          </div>
+          <div class="gauge-grid">
+            <div class="gauge-box">
+              <span style="font-weight: 700; font-size: 0.9rem; color: #fff;">Mithi River Basin</span>
+              <canvas id="gauge-mithi" class="gauge-canvas"></canvas>
+              <span class="badge-triage critical">OVERFLOWING (4.85M)</span>
+            </div>
+            <div class="gauge-box">
+              <span style="font-weight: 700; font-size: 0.9rem; color: #fff;">Ulhas River Basin</span>
+              <canvas id="gauge-ulhas" class="gauge-canvas"></canvas>
+              <span class="badge-triage high">WARNING (6.10M)</span>
+            </div>
+            <div class="gauge-box">
+              <span style="font-weight: 700; font-size: 0.9rem; color: #fff;">Coastal Squall Wind</span>
+              <canvas id="gauge-wind" class="gauge-canvas"></canvas>
+              <span class="badge-triage critical">GALE: 68 KM/H</span>
+            </div>
+            <div class="gauge-box" style="justify-content: center;">
+              <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Dam Discharge Rate</div>
+              <div style="font-size: 2.2rem; font-weight: 800; font-family: var(--font-mono); color: var(--color-danger); margin: 6px 0;">
+                14,800
+              </div>
+              <div style="font-size: 0.78rem; color: var(--text-dim);">Cubic Feet/Sec (Cusecs)</div>
+              <span class="badge-triage critical" style="margin-top: 8px;">GATES 1-6 OPEN</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2col">
+          <!-- 24-Hour Rainfall Trend Chart -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🌧️ 24-Hour Precipitation Trend (mm/hr)</span>
+              <span style="font-size: 0.78rem; color: var(--color-danger); font-weight: 700;">210mm Total</span>
+            </div>
+            <div style="position: relative; width: 100%; height: 200px;">
+              <canvas id="rainfall-chart-canvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Coastal Tide & Flash Flood Warning -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🌊 Arabian Sea Coastal Surge & Tide Forecast</span>
+              <span class="badge-triage high">HIGH TIDE RISK</span>
+            </div>
+            <div id="tidal-schedule-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <!-- Populated by telemetry.js -->
+            </div>
+            <div class="alert-box danger" style="margin-top: 12px; margin-bottom: 0;">
+              <div>⚠️ <strong>WARNING:</strong> 5.12m High Tide coinciding with heavy rainfall at 04:45 PM will prevent stormwater drainage into the sea. Prepare for rapid sea backflow in low-lying corridors.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================================
+           TAB 7: SURVIVAL PROTOCOLS & MISSING PERSONS
+           ========================================================================= -->
+      <section id="survival-tab" class="tab-pane">
+        <div class="grid-2col">
+          <!-- Left: Offline Survival Protocols -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">📖 Offline Monsoon Survival & First-Aid Protocols</span>
+              <span style="font-size: 0.75rem; color: var(--color-accent); font-weight: 700;">OFFLINE READY</span>
+            </div>
+
+            <!-- Protocol 1: Electrocution -->
+            <div class="protocol-accordion open">
+              <div class="protocol-header">
+                <span>⚡ Submerged Power Lines & Electrocution Avoidance</span>
+                <span>▼</span>
+              </div>
+              <div class="protocol-body">
+                <div class="alert-box danger">
+                  <strong>CRITICAL RULE:</strong> Never step into water if fallen wires or bubbling sparks are visible within 50 feet. Water conducts high-voltage current silently.
+                </div>
+                <ul class="step-list">
+                  <li><strong>Step-Potential Hazard:</strong> If caught in electrified water, keep your feet together and shuffle/hop away. Never take large steps.</li>
+                  <li><strong>Submerged Transformers:</strong> Avoid steel electricity poles and basement meter rooms completely.</li>
+                  <li><strong>In-house Safety:</strong> Turn off the main electrical breaker switch with a dry wooden stick before water reaches wall sockets.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Protocol 2: Water Purification -->
+            <div class="protocol-accordion">
+              <div class="protocol-header">
+                <span>💧 Emergency Safe Drinking Water Purification</span>
+                <span>▼</span>
+              </div>
+              <div class="protocol-body">
+                <p>Floodwaters are contaminated with sewage and leptospirosis bacteria. Follow these field purification guidelines:</p>
+                <ul class="step-list">
+                  <li><strong>Boiling (Gold Standard):</strong> Bring cloudy water to a rolling boil for a minimum of 3 full minutes.</li>
+                  <li><strong>Chlorine / Halazone Tablets:</strong> Add 1 tablet (500mg) per 20 Litres of clear water. Stir and wait 30 minutes before drinking.</li>
+                  <li><strong>Emergency Bleach Dosage:</strong> In extreme survival: Add 2 drops of unscented household bleach (5% sodium hypochlorite) per 1 Litre of water. Wait 30 minutes.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Protocol 3: Snakebite -->
+            <div class="protocol-accordion">
+              <div class="protocol-header">
+                <span>🐍 Snakebite Emergency Protocol in Floods</span>
+                <span>▼</span>
+              </div>
+              <div class="protocol-body">
+                <div class="alert-box warning">
+                  Reptiles seek dry ground during floods (tree branches, roofs, furniture). Stay alert when wading in murky water.
+                </div>
+                <ul class="step-list">
+                  <li><strong>Immobilize Limb:</strong> Keep the bitten limb completely still and positioned below the heart level.</li>
+                  <li><strong>DO NOT CUT OR SUCK:</strong> Never cut the wound, apply ice, or suck the venom.</li>
+                  <li><strong>DO NOT USE TOURNIQUETS:</strong> Do not tie tight rubber tourniquets (causes limb tissue necrosis). Apply a firm crepe pressure bandage over the entire limb instead.</li>
+                  <li><strong>Rush to Camp:</strong> Note snake markings if possible and transport victim calmly to St. Mary High School (Stocked with Anti-Snake Venom).</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Protocol 4: DIY Improvised Rafts -->
+            <div class="protocol-accordion">
+              <div class="protocol-header">
+                <span>🛶 DIY Floating Rafts & Buoyancy Devices</span>
+                <span>▼</span>
+              </div>
+              <div class="protocol-body">
+                <ul class="step-list">
+                  <li><strong>Plastic Canister Raft:</strong> Tie 4 to 6 empty, tightly sealed 20-litre plastic water cans together with rope underneath a wooden door or bamboo frame to support 2 adults.</li>
+                  <li><strong>Heavy Duty Tarpaulin Bundle:</strong> Place dry grass, inflated air-pillows, or empty sealed bottles inside a thick tarp, folded and lashed like a coracle.</li>
+                  <li><strong>Pants Buoyancy Trick:</strong> Tie knots in the legs of denim jeans, zip up, and swing through the air over your head to trap air pockets inside the legs for an instant emergency life vest.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Missing Persons & Safe Check-In Bulletin -->
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="card" style="border-color: var(--color-success-glow);">
+              <div class="card-header">
+                <span class="card-title" style="color: #a7f3d0;">
+                  <span class="icon">✅</span> Community "I Am Safe" Check-In
+                </span>
+                <span class="badge-triage resolved">COMMUNITY BOARD</span>
+              </div>
+              <form id="safe-checkin-form">
+                <div class="grid-2col" style="gap: 8px;">
+                  <input type="text" id="sc-name" class="form-control" placeholder="Your Full Name" required>
+                  <input type="number" id="sc-family" class="form-control" placeholder="Headcount (e.g. 3)" value="1">
+                </div>
+                <div style="margin: 8px 0;">
+                  <input type="text" id="sc-shelter" class="form-control" placeholder="Current Shelter / High Ground Location" required>
+                </div>
+                <div style="margin-bottom: 8px;">
+                  <input type="text" id="sc-message" class="form-control" placeholder="Short note for family (e.g. Rescued, battery low...)">
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%;">
+                  ✓ Mark Myself & Family Safe
+                </button>
+              </form>
+
+              <div style="margin-top: 14px;">
+                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Recent Community Check-ins:</div>
+                <div id="safe-checkins-list" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Populated by survival.js -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Missing Persons Search & Registry -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">👥 Missing Persons Registry</span>
+                <button class="btn btn-primary" style="font-size: 0.75rem; padding: 4px 8px;" onclick="document.getElementById('report-missing-form-box').classList.toggle('active');">
+                  + Report Missing
+                </button>
+              </div>
+
+              <!-- Search Bar -->
+              <div style="margin-bottom: 12px;">
+                <input type="text" id="missing-person-search" class="form-control" placeholder="🔍 Search missing person by name, age, or last seen landmark...">
+              </div>
+
+              <!-- Collapsible Report Form -->
+              <div id="report-missing-form-box" style="display: none; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-active); border-radius: var(--radius-md); padding: 14px; margin-bottom: 12px;">
+                <form id="report-missing-form">
+                  <div class="grid-2col" style="gap: 8px; margin-bottom: 8px;">
+                    <input type="text" id="mp-name" class="form-control" placeholder="Missing Person's Full Name" required>
+                    <input type="number" id="mp-age" class="form-control" placeholder="Age" min="1" max="120">
+                  </div>
+                  <div class="grid-2col" style="gap: 8px; margin-bottom: 8px;">
+                    <select id="mp-gender" class="form-select">
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Child">Child</option>
+                      <option value="Other">Other</option>
+                    </select>
+                    <input type="text" id="mp-clothing" class="form-control" placeholder="Clothing / Identifiers">
+                  </div>
+                  <div style="margin-bottom: 8px;">
+                    <input type="text" id="mp-location" class="form-control" placeholder="Last Known Location / Sector" required>
+                  </div>
+                  <div style="margin-bottom: 8px;">
+                    <input type="text" id="mp-contact" class="form-control" placeholder="Your Name & Mobile Number" required>
+                  </div>
+                  <button type="submit" class="btn btn-danger" style="width: 100%;">Broadcast Missing Person Alert</button>
+                </form>
+              </div>
+
+              <div id="missing-persons-list" style="max-height: 250px; overflow-y: auto;">
+                <!-- Populated by survival.js -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Fullscreen Night Rescue Strobe Beacon Overlay -->
+  <div id="beacon-overlay" onclick="window.emergencyAudio.stopRescueBeacon()" aria-label="Rescue Beacon Strobe">
+    <div class="beacon-content">
+      <h2>🚨 RESCUE BEACON ACTIVE 🚨</h2>
+      <p>Hold screen upwards towards rescue helicopters and boats.</p>
+      <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 16px;">[ Tap anywhere on screen to turn off beacon ]</p>
+    </div>
+  </div>
+
+  <!-- Shared Action Modal -->
+  <div id="dispatch-modal" class="modal-backdrop">
+    <div class="modal-card">
+      <div id="dispatch-modal-content"></div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- Leaflet Map Engine (Google Map Vector & Tile Provider) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/pincode.js"></script>
+  <script src="js/sos.js"></script>
+  <script src="js/verifiedReports.js"></script>
+  <script src="js/shelters.js"></script>
+  <script src="js/telemetry.js"></script>
+  <script src="js/survival.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
