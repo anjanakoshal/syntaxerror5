@@ -56,9 +56,9 @@ class PincodeRouteEngine {
     const resultsContainer = document.getElementById('pin-route-results');
     if (!resultsContainer) return;
 
-    if (!/^\d{6}$/.test(origin || '') || !/^\d{6}$/.test(dest || '')) {
+    if (!origin || !dest) {
       resultsContainer.style.display = 'block';
-      resultsContainer.innerHTML = '<div class="card alert-box warning">Please enter valid 6-digit Indian PIN codes for both origin and destination.</div>';
+      resultsContainer.innerHTML = '<div class="card alert-box warning">Please enter both an origin and destination city, locality, or PIN code.</div>';
       return;
     }
 
@@ -80,8 +80,8 @@ class PincodeRouteEngine {
     const db = window.appStorage.getAllPincodes();
     try {
       const [originData, destData] = await Promise.all([
-        this.resolvePin(origin, db, 'Origin'),
-        this.resolvePin(dest, db, 'Destination')
+        this.resolveLocation(origin, db, 'Origin'),
+        this.resolveLocation(dest, db, 'Destination')
       ]);
       // 1. Fetch real-time weather for origin
       const originWeather = await this.fetchRealWeather(originData.latLng, originData.area);
@@ -134,33 +134,34 @@ class PincodeRouteEngine {
     return this.fetchOpenMeteoWeather(lat, lng, areaName);
   }
 
-  async resolvePin(pin, db, label) {
-    if (db[pin]?.latLng) return db[pin];
+  async resolveLocation(query, db, label) {
+    const value = query.trim();
+    const normalized = value.toLowerCase();
+    const pinMatch = /^\d{6}$/.test(value) ? value : null;
+    if (pinMatch && db[pinMatch]?.latLng) return db[pinMatch];
 
-    const mapPin = window.floodMap?.geoData?.pincodes?.find(item => item.pin === pin);
+    const mapPin = window.floodMap?.geoData?.pincodes?.find(item =>
+      item.pin === pinMatch || item.name.toLowerCase().includes(normalized) || normalized.includes(item.name.split(',')[0].toLowerCase())
+    );
     if (mapPin?.latLng) {
-      const pinData = this.generateFallbackPin(pin, mapPin.name);
+      const pinData = this.generateFallbackPin(mapPin.pin, mapPin.name);
       pinData.latLng = mapPin.latLng;
       pinData.statusLevel = mapPin.status;
       return pinData;
     }
 
-    const postalResponse = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
-    if (!postalResponse.ok) throw new Error(`${label} PIN lookup failed`);
-    const postalData = await postalResponse.json();
-    const office = postalData?.[0]?.PostOffice?.[0];
-    if (!office) throw new Error(`Invalid ${label.toLowerCase()} PIN code`);
-
-    const query = encodeURIComponent(`${office.Name}, ${office.District}, ${office.State}, India`);
-    const geoResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${query}`, {
+    const search = encodeURIComponent(`${value}, India`);
+    const geoResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=in&q=${search}`, {
       headers: { Accept: 'application/json' }
     });
-    if (!geoResponse.ok) throw new Error(`${label} PIN geocoding failed`);
+    if (!geoResponse.ok) throw new Error(`${label} location search failed`);
     const geoData = await geoResponse.json();
-    if (!geoData[0]) throw new Error(`${label} PIN location is ambiguous`);
+    if (!geoData[0]) throw new Error(`${label} location was not found`);
 
-    const pinData = this.generateFallbackPin(pin, `${office.Name}, ${office.District}, ${office.State}`);
-    pinData.area = `${office.Name}, ${office.District}, ${office.State}`;
+    const result = geoData[0];
+    const pincode = result.display_name.match(/\b\d{6}\b/)?.[0] || value;
+    const pinData = this.generateFallbackPin(pincode, result.display_name.split(',').slice(0, 3).join(','));
+    pinData.area = result.display_name.split(',').slice(0, 3).join(',');
     pinData.latLng = [Number(geoData[0].lat), Number(geoData[0].lon)];
     return pinData;
   }

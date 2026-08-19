@@ -135,7 +135,7 @@
         </li>
         <li>
           <button class="nav-tab-btn" data-tab="pincode-tab" data-i18n="tabPinRoute">
-            📍 PIN Code Route Weather
+            📍 Route Weather
           </button>
         </li>
         <li>
@@ -317,29 +317,29 @@
       </section>
 
       <!-- =========================================================================
-           TAB 2: PIN CODE ROUTE WEATHER & HAZARD INSPECTOR
+           TAB 2: ROUTE WEATHER & HAZARD INSPECTOR
            ========================================================================= -->
       <section id="pincode-tab" class="tab-pane">
         <div class="pin-search-container">
           <div class="card-header" style="border: none; padding: 0; margin-bottom: 12px;">
             <h2 style="font-size: 1.25rem; color: #fff; display: flex; align-items: center; gap: 8px;">
-              <span>📍</span> <span data-i18n="pinSearchTitle">Check Route Weather by PIN Code</span>
+                <span>📍</span> <span data-i18n="pinSearchTitle">Check Route Weather & Hazard Inspector</span>
             </h2>
             <span class="badge-triage resolved">REAL-TIME WEATHER ROUTER</span>
           </div>
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
-            Enter your Origin and Destination PIN codes to analyze road blockades, rainfall intensity, severe wind gusts, and generate safe elevated bypass corridors.
+            Search an origin and destination by city, locality, or PIN code to calculate the actual road route and weather along the journey.
           </p>
 
           <form id="pincode-route-form">
             <div class="grid-3col" style="gap: 12px; align-items: end;">
               <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label required">Origin PIN Code</label>
-                <input type="text" id="pin-origin-input" class="form-control" placeholder="Origin PIN (e.g. 682011)" data-i18n="originPinPlaceholder" value="682011" required maxlength="6">
+                <label class="form-label required">From</label>
+                <input type="text" id="pin-origin-input" class="form-control" placeholder="City, locality, or PIN code" data-i18n="originPinPlaceholder" value="Kottayam" required autocomplete="address-level2">
               </div>
               <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label required">Destination PIN Code</label>
-                <input type="text" id="pin-dest-input" class="form-control" placeholder="Destination PIN (e.g. 688001)" data-i18n="destPinPlaceholder" value="688001" maxlength="6" required>
+                <label class="form-label required">To</label>
+                <input type="text" id="pin-dest-input" class="form-control" placeholder="City, locality, or PIN code" data-i18n="destPinPlaceholder" value="Kochi" required autocomplete="address-level2">
               </div>
               <div class="form-group" style="margin-bottom: 0;">
                 <label class="form-label required">Travel date</label>
